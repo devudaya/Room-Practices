@@ -1,0 +1,2 @@
+rootProject.name='Room+Architecture Components'
+include ':app'
