@@ -22,7 +22,7 @@ class Repository(context: Context) {
         Log.d("AllNotes", allNotes.toString() )
     }
 
-    fun insterNote(note: Note) {
+    fun insertNote(note: Note) {
 
         runBlocking {
             launch(Dispatchers.IO) { noteDao.insertNote(note) }
