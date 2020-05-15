@@ -4,34 +4,20 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.roomarchitecturecomponents.entities.Note
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class NoteViewModel(application: Application) : AndroidViewModel(application) {
+class NoteViewModel(
+        application: Application)
+    : AndroidViewModel(application) {
 
-    private var noteRepository: Repository = Repository(application)
-
-    private val allNotes by lazy {
-        MutableLiveData<MutableList<Note>>()
-    }
+    private val noteRepository: Repository = Repository(application, viewModelScope)
+    val allNotes = noteRepository.getAllNotes()
 
     fun insertNote(note: Note) {
-        noteRepository.insertNote(note)
+        viewModelScope.launch(Dispatchers.IO) { noteRepository.insertNote(note) }
     }
 
-    fun updateNote(note: Note) {
-        noteRepository.updateNote(note)
-    }
-
-    fun deleteNote(note: Note) {
-        noteRepository.deleteNote(note)
-    }
-
-    fun deleteAllNotes() {
-        noteRepository.deleteAllNotes()
-    }
-
-    fun getAllNotes(): LiveData<MutableList<Note>> {
-        allNotes.value = noteRepository.getAllNotes().value
-        return allNotes
-    }
 }

@@ -7,66 +7,61 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.roomarchitecturecomponents.daos.NoteDao
 import com.example.roomarchitecturecomponents.entities.Note
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-@Database(entities = [Note::class], version = 2)
+@Database(entities = [Note::class], version = 1)
 abstract class NoteDatabase : RoomDatabase() {
+
+    abstract fun getDao(): NoteDao
 
     companion object {
 
         private var dataBaseInstance: NoteDatabase? = null
 
         // get the instance of Note Database
-        fun getInstance(context: Context): NoteDatabase {
+        fun getInstance(context: Context, scope: CoroutineScope): NoteDatabase {
 
-            dataBaseInstance.let {
-                dataBaseInstance = if (it == null)
-                    Room.databaseBuilder(
+            return dataBaseInstance ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
                         context.applicationContext,
                         NoteDatabase::class.java,
                         "note_database"
-                    )
+                )
+                        // Wipes and rebuilds instead of migrating if no Migration object.
+                        // Migration is not part of this codelab.
                         .fallbackToDestructiveMigration()
-                        .addCallback(roomCallback)
+                        .addCallback(NoteDbCallBack(scope))
                         .build()
-                else dataBaseInstance!!
-                return dataBaseInstance!!
+                dataBaseInstance = instance
+                // return instance
+                instance
 
             }
         }
 
-        private val roomCallback = object : RoomDatabase.Callback() {
+        private class NoteDbCallBack(var scope: CoroutineScope) : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-
-                runBlocking {
-                    launch(Dispatchers.IO) {
-                        dataBaseInstance!!.getDao().insertNote(
-                            Note(
-                                "Title 1",
-                                "Description 1", 1
-                            )
-                        )
-                        dataBaseInstance!!.getDao().insertNote(
-                            Note(
-                                "Title 2",
-                                "Description 2", 2
-                            )
-                        )
-                        dataBaseInstance!!.getDao().insertNote(
-                            Note(
-                                "Title 3",
-                                "Description 3", 3
-                            )
-                        )
+                dataBaseInstance?.let { database ->
+                    scope.launch(Dispatchers.IO) {
+                        populateDatabase(database.getDao())
                     }
                 }
             }
         }
+
+        fun populateDatabase(note: NoteDao) {
+
+            // Start the app with a clean database every time.
+            // Not needed if you only populate on creation.
+            note.deleteAllNotes()
+            note.insertNote(Note("Title 1", "DES1", 1))
+            note.insertNote(Note("Title 2", "DES2", 2))
+            note.insertNote(Note("Title 3", "DES3", 3))
+
+        }
     }
-
-    abstract fun getDao(): NoteDao
-
 }

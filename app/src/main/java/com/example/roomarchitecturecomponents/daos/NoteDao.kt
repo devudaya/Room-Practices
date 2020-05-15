@@ -20,6 +20,6 @@ interface NoteDao {
     fun deleteAllNotes()
 
     @Query("SELECT * from note_table ORDER BY priority DESC")
-    fun getAllNotes():LiveData<MutableList<Note>>
+    fun getAllNotes(): LiveData<MutableList<Note>>
 
 }
