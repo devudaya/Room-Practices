@@ -33,4 +33,16 @@ class Repository(
         return allNotes
     }
 
+    fun deleteNote(note: Note) {
+        noteDao.deleteNote(note)
+    }
+
+    fun deleteAllNotes() {
+        noteDao.deleteAllNotes()
+    }
+
+    fun updateNote(note: Note) {
+        noteDao.updateNote(note)
+    }
+
 }
