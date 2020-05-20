@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         // -- Attach View Model
         noteViewModel = ViewModelProvider(this).get(NoteViewModel::class.java)
         noteViewModel.allNotes.observe(this, Observer {
-            adapter.setNotes(it)
+            adapter.submitList(it)
         })
     }
 
